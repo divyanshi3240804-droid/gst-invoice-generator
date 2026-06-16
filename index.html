@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GST Invoice Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1a2e;
+      --ink-soft: #4a4a6a;
+      --accent: #5c6ef8;
+      --accent-light: #eef0ff;
+      --green: #22c55e;
+      --border: #dde0f5;
+      --bg: #f7f8ff;
+      --white: #ffffff;
+      --red: #ef4444;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--ink);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    header .logo {
+      font-family: 'Playfair Display', serif;
+      color: #fff;
+      font-size: 1.4rem;
+      letter-spacing: 0.5px;
+    }
+    header .logo span { color: var(--accent); }
+    .built-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+      letter-spacing: 0.3px;
+    }
+    .built-btn:hover { background: #4457e8; }
+
+    /* CREATOR TAG */
+    .creator-tag {
+      text-align: center;
+      padding: 10px;
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+      background: var(--accent-light);
+      border-bottom: 1px solid var(--border);
+    }
+    .creator-tag strong { color: var(--ink); }
+
+    /* LAYOUT */
+    .container {
+      max-width: 900px;
+      margin: 36px auto;
+      padding: 0 16px 60px;
+    }
+
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+    .page-sub {
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+    }
+
+    /* CARD */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 18px;
+    }
+
+    /* FORM GRID */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    @media (max-width: 600px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--ink-soft);
+      margin-bottom: 6px;
+      letter-spacing: 0.2px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      color: var(--ink);
+      background: #fafbff;
+      transition: border 0.2s;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      background: #fff;
+    }
+    textarea { resize: vertical; min-height: 72px; }
+
+    /* ITEMS TABLE */
+    .items-header {
+      display: grid;
+      grid-template-columns: 2.5fr 0.8fr 1fr 1fr 36px;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .items-header span {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .item-row {
+      display: grid;
+      grid-template-columns: 2.5fr 0.8fr 1fr 1fr 36px;
+      gap: 8px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    .item-row .item-total {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--ink);
+      padding: 10px 0;
+    }
+    .remove-btn {
+      background: none;
+      border: none;
+      color: var(--red);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+    .remove-btn:hover { background: #fef2f2; }
+
+    @media (max-width: 600px) {
+      .items-header { display: none; }
+      .item-row { grid-template-columns: 1fr 1fr; }
+      .item-row .item-total { grid-column: span 2; }
+    }
+
+    .add-item-btn {
+      background: var(--accent-light);
+      color: var(--accent);
+      border: 1.5px dashed var(--accent);
+      border-radius: 7px;
+      padding: 10px 18px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 4px;
+      transition: background 0.2s;
+    }
+    .add-item-btn:hover { background: #e0e4ff; }
+
+    /* GST TYPE */
+    .gst-toggle { display: flex; gap: 12px; margin-bottom: 0; }
+    .gst-option {
+      flex: 1;
+      padding: 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--ink-soft);
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .gst-option.active {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    /* SUMMARY */
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 0.88rem;
+      color: var(--ink-soft);
+      border-bottom: 1px solid var(--bg);
+    }
+    .summary-row.total {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--ink);
+      border-bottom: none;
+      padding-top: 14px;
+    }
+    .summary-row span:last-child { font-weight: 600; color: var(--ink); }
+    .summary-row.total span:last-child { color: var(--accent); font-size: 1.2rem; }
+
+    /* ACTIONS */
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 13px 28px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex: 1;
+      min-width: 140px;
+    }
+    .btn-primary:hover { background: #4457e8; }
+    .btn-outline {
+      background: #fff;
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+      padding: 13px 28px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+      min-width: 140px;
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* PREVIEW */
+    #preview-section { display: none; }
+    .invoice-preview {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      font-size: 0.88rem;
+    }
+    .inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+    .inv-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--ink); }
+    .inv-meta { text-align: right; font-size: 0.82rem; color: var(--ink-soft); line-height: 1.8; }
+    .inv-meta strong { color: var(--ink); }
+    .inv-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+    .inv-party-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 6px; }
+    .inv-party-name { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+    .inv-party-detail { color: var(--ink-soft); line-height: 1.7; font-size: 0.82rem; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    th { background: var(--ink); color: #fff; padding: 10px 12px; font-size: 0.75rem; text-align: left; font-weight: 600; }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--bg); font-size: 0.84rem; }
+    tr:last-child td { border-bottom: none; }
+    .inv-totals { max-width: 280px; margin-left: auto; }
+    .inv-total-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.84rem; color: var(--ink-soft); border-bottom: 1px solid var(--bg); }
+    .inv-total-row.grand { font-weight: 700; font-size: 1rem; color: var(--ink); border-top: 2px solid var(--ink); border-bottom: none; padding-top: 10px; margin-top: 6px; }
+    .inv-total-row span:last-child { font-weight: 600; color: var(--ink); }
+    .inv-total-row.grand span:last-child { color: var(--accent); }
+    .inv-footer { margin-top: 36px; text-align: center; font-size: 0.75rem; color: var(--ink-soft); border-top: 1px solid var(--border); padding-top: 16px; }
+    .inv-built-link { display: inline-block; margin-top: 10px; background: var(--accent); color: #fff; padding: 7px 18px; border-radius: 5px; text-decoration: none; font-size: 0.78rem; font-weight: 600; }
+
+    @media print {
+      body { background: #fff; }
+      header, .creator-tag, .container > :not(#preview-section) { display: none !important; }
+      #preview-section { display: block !important; }
+      .card { display: none; }
+      .actions { display: none; }
+      .invoice-preview { border: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">GST <span>Invoice</span> Generator</div>
+  <a href="https://digitalheroesco.com" target="_blank" class="built-btn">Built for Digital Heroes</a>
+</header>
+
+<div class="creator-tag">
+  Built by <strong>Divyanshi Jaiswal</strong> &nbsp;|&nbsp; <strong>divyanshi3240804@gmail.com</strong>
+</div>
+
+<div class="container">
+  <div class="page-title">GST Invoice Generator</div>
+  <div class="page-sub">Create professional GST-compliant invoices instantly — free, no signup needed.</div>
+
+  <!-- SELLER INFO -->
+  <div class="card">
+    <div class="card-title">Your Business Details (Seller)</div>
+    <div class="grid-2">
+      <div>
+        <label>Business Name *</label>
+        <input type="text" id="seller-name" placeholder="e.g. Divyanshi Designs" />
+      </div>
+      <div>
+        <label>GSTIN (optional)</label>
+        <input type="text" id="seller-gstin" placeholder="e.g. 22AAAAA0000A1Z5" maxlength="15" />
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" id="seller-email" placeholder="your@email.com" />
+      </div>
+      <div>
+        <label>Phone</label>
+        <input type="text" id="seller-phone" placeholder="+91 98765 43210" />
+      </div>
+      <div style="grid-column: span 2;">
+        <label>Address</label>
+        <textarea id="seller-address" placeholder="Street, City, State, PIN"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVOICE META -->
+  <div class="card">
+    <div class="card-title">Invoice Details</div>
+    <div class="grid-3">
+      <div>
+        <label>Invoice Number *</label>
+        <input type="text" id="inv-number" value="INV-001" />
+      </div>
+      <div>
+        <label>Invoice Date *</label>
+        <input type="date" id="inv-date" />
+      </div>
+      <div>
+        <label>Due Date</label>
+        <input type="date" id="due-date" />
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENT INFO -->
+  <div class="card">
+    <div class="card-title">Client / Buyer Details</div>
+    <div class="grid-2">
+      <div>
+        <label>Client Name *</label>
+        <input type="text" id="client-name" placeholder="e.g. Rahul Enterprises" />
+      </div>
+      <div>
+        <label>Client GSTIN (optional)</label>
+        <input type="text" id="client-gstin" placeholder="e.g. 27BBBBB0000B1Z3" maxlength="15" />
+      </div>
+      <div>
+        <label>Client Email</label>
+        <input type="email" id="client-email" placeholder="client@email.com" />
+      </div>
+      <div>
+        <label>Client Phone</label>
+        <input type="text" id="client-phone" placeholder="+91 98765 43210" />
+      </div>
+      <div style="grid-column: span 2;">
+        <label>Client Address</label>
+        <textarea id="client-address" placeholder="Street, City, State, PIN"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ITEMS -->
+  <div class="card">
+    <div class="card-title">Items / Services</div>
+    <div class="items-header">
+      <span>Description</span>
+      <span>Qty</span>
+      <span>Rate (₹)</span>
+      <span>Amount (₹)</span>
+      <span></span>
+    </div>
+    <div id="items-list"></div>
+    <button class="add-item-btn" onclick="addItem()">+ Add Item</button>
+  </div>
+
+  <!-- GST SETTINGS -->
+  <div class="card">
+    <div class="card-title">GST Settings</div>
+    <div class="grid-2" style="gap:20px; align-items:start;">
+      <div>
+        <label style="margin-bottom:10px;">GST Type</label>
+        <div class="gst-toggle">
+          <div class="gst-option active" id="opt-intra" onclick="setGstType('intra')">Intra-state<br><small style="font-weight:400;font-size:0.74rem;">CGST + SGST</small></div>
+          <div class="gst-option" id="opt-inter" onclick="setGstType('inter')">Inter-state<br><small style="font-weight:400;font-size:0.74rem;">IGST</small></div>
+        </div>
+      </div>
+      <div>
+        <label>GST Rate (%)</label>
+        <select id="gst-rate" onchange="recalculate()">
+          <option value="0">0% (Exempt)</option>
+          <option value="5">5%</option>
+          <option value="12">12%</option>
+          <option value="18" selected>18%</option>
+          <option value="28">28%</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="card">
+    <div class="card-title">Invoice Summary</div>
+    <div id="summary-box">
+      <div class="summary-row"><span>Subtotal</span><span id="s-subtotal">₹0.00</span></div>
+      <div class="summary-row" id="row-cgst"><span>CGST</span><span id="s-cgst">₹0.00</span></div>
+      <div class="summary-row" id="row-sgst"><span>SGST</span><span id="s-sgst">₹0.00</span></div>
+      <div class="summary-row" id="row-igst" style="display:none"><span>IGST</span><span id="s-igst">₹0.00</span></div>
+      <div class="summary-row total"><span>Total Amount</span><span id="s-total">₹0.00</span></div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="card">
+    <div class="actions">
+      <button class="btn-primary" onclick="generateInvoice()">🧾 Preview Invoice</button>
+      <button class="btn-outline" onclick="printInvoice()">🖨️ Print / Save PDF</button>
+      <button class="btn-outline" onclick="resetForm()">↩ Reset</button>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div id="preview-section">
+    <div class="card-title" style="margin-bottom:16px; font-size:0.72rem; letter-spacing:1.2px; text-transform:uppercase; color:var(--accent);">Invoice Preview</div>
+    <div class="invoice-preview" id="invoice-output"></div>
+    <div class="actions" style="margin-top:16px;">
+      <button class="btn-primary" onclick="printInvoice()">🖨️ Print / Save as PDF</button>
+      <button class="btn-outline" onclick="document.getElementById('preview-section').style.display='none'">✕ Close Preview</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let gstType = 'intra';
+  let items = [];
+
+  // Set today's date
+  document.getElementById('inv-date').valueAsDate = new Date();
+  const due = new Date(); due.setDate(due.getDate() + 30);
+  document.getElementById('due-date').valueAsDate = due;
+
+  // Add first item on load
+  addItem();
+
+  function addItem() {
+    const id = Date.now();
+    items.push({ id });
+    renderItems();
+  }
+
+  function removeItem(id) {
+    if (items.length === 1) return;
+    items = items.filter(i => i.id !== id);
+    renderItems();
+  }
+
+  function renderItems() {
+    const list = document.getElementById('items-list');
+    list.innerHTML = items.map(item => `
+      <div class="item-row" id="row-${item.id}">
+        <input type="text" placeholder="Description of item/service" oninput="updateItem(${item.id},'desc',this.value)" value="${item.desc||''}" />
+        <input type="number" placeholder="1" min="1" oninput="updateItem(${item.id},'qty',this.value)" value="${item.qty||''}" />
+        <input type="number" placeholder="0.00" min="0" step="0.01" oninput="updateItem(${item.id},'rate',this.value)" value="${item.rate||''}" />
+        <div class="item-total">₹${fmt((item.qty||0)*(item.rate||0))}</div>
+        <button class="remove-btn" onclick="removeItem(${item.id})" title="Remove">✕</button>
+      </div>
+    `).join('');
+    recalculate();
+  }
+
+  function updateItem(id, field, value) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    item[field] = field === 'desc' ? value : parseFloat(value) || 0;
+    const row = document.getElementById(`row-${id}`);
+    if (row) row.querySelector('.item-total').textContent = '₹' + fmt((item.qty||0)*(item.rate||0));
+    recalculate();
+  }
+
+  function setGstType(type) {
+    gstType = type;
+    document.getElementById('opt-intra').classList.toggle('active', type === 'intra');
+    document.getElementById('opt-inter').classList.toggle('active', type === 'inter');
+    document.getElementById('row-cgst').style.display = type === 'intra' ? '' : 'none';
+    document.getElementById('row-sgst').style.display = type === 'intra' ? '' : 'none';
+    document.getElementById('row-igst').style.display = type === 'inter' ? '' : 'none';
+    recalculate();
+  }
+
+  function recalculate() {
+    const subtotal = items.reduce((s, i) => s + (i.qty||0)*(i.rate||0), 0);
+    const rate = parseFloat(document.getElementById('gst-rate').value) / 100;
+    const gstAmt = subtotal * rate;
+    const total = subtotal + gstAmt;
+
+    document.getElementById('s-subtotal').textContent = '₹' + fmt(subtotal);
+    document.getElementById('s-total').textContent = '₹' + fmt(total);
+
+    if (gstType === 'intra') {
+      document.getElementById('s-cgst').textContent = '₹' + fmt(gstAmt / 2);
+      document.getElementById('s-sgst').textContent = '₹' + fmt(gstAmt / 2);
+      const rateVal = parseFloat(document.getElementById('gst-rate').value);
+      document.querySelector('#row-cgst span').textContent = `CGST (${rateVal/2}%)`;
+      document.querySelector('#row-sgst span').textContent = `SGST (${rateVal/2}%)`;
+    } else {
+      document.getElementById('s-igst').textContent = '₹' + fmt(gstAmt);
+    }
+  }
+
+  function fmt(n) { return parseFloat(n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+  function generateInvoice() {
+    const sellerName = document.getElementById('seller-name').value || 'Your Business';
+    const sellerGst = document.getElementById('seller-gstin').value;
+    const sellerEmail = document.getElementById('seller-email').value;
+    const sellerPhone = document.getElementById('seller-phone').value;
+    const sellerAddr = document.getElementById('seller-address').value;
+
+    const clientName = document.getElementById('client-name').value || 'Client Name';
+    const clientGst = document.getElementById('client-gstin').value;
+    const clientEmail = document.getElementById('client-email').value;
+    const clientPhone = document.getElementById('client-phone').value;
+    const clientAddr = document.getElementById('client-address').value;
+
+    const invNum = document.getElementById('inv-number').value;
+    const invDate = document.getElementById('inv-date').value;
+    const dueDate = document.getElementById('due-date').value;
+    const gstRate = parseFloat(document.getElementById('gst-rate').value);
+
+    const subtotal = items.reduce((s, i) => s + (i.qty||0)*(i.rate||0), 0);
+    const gstAmt = subtotal * gstRate / 100;
+    const total = subtotal + gstAmt;
+
+    const rows = items.filter(i => i.desc || i.rate).map((item, idx) => `
+      <tr>
+        <td>${idx+1}</td>
+        <td>${item.desc || '—'}</td>
+        <td style="text-align:center">${item.qty||0}</td>
+        <td style="text-align:right">₹${fmt(item.rate||0)}</td>
+        <td style="text-align:right">₹${fmt((item.qty||0)*(item.rate||0))}</td>
+      </tr>
+    `).join('');
+
+    const gstRows = gstType === 'intra'
+      ? `<div class="inv-total-row"><span>CGST (${gstRate/2}%)</span><span>₹${fmt(gstAmt/2)}</span></div>
+         <div class="inv-total-row"><span>SGST (${gstRate/2}%)</span><span>₹${fmt(gstAmt/2)}</span></div>`
+      : `<div class="inv-total-row"><span>IGST (${gstRate}%)</span><span>₹${fmt(gstAmt)}</span></div>`;
+
+    const formatDate = d => d ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+
+    document.getElementById('invoice-output').innerHTML = `
+      <div class="inv-header">
+        <div>
+          <div class="inv-title">INVOICE</div>
+          <div style="color:var(--ink-soft);font-size:0.82rem;margin-top:4px;">${sellerName}</div>
+        </div>
+        <div class="inv-meta">
+          <div><strong>Invoice No:</strong> ${invNum}</div>
+          <div><strong>Date:</strong> ${formatDate(invDate)}</div>
+          <div><strong>Due:</strong> ${formatDate(dueDate)}</div>
+          ${sellerGst ? `<div style="margin-top:6px;"><strong>GSTIN:</strong> ${sellerGst}</div>` : ''}
+        </div>
+      </div>
+
+      <div class="inv-parties">
+        <div>
+          <div class="inv-party-label">From</div>
+          <div class="inv-party-name">${sellerName}</div>
+          <div class="inv-party-detail">
+            ${sellerEmail ? sellerEmail + '<br>' : ''}
+            ${sellerPhone ? sellerPhone + '<br>' : ''}
+            ${sellerAddr ? sellerAddr.replace(/\n/g,'<br>') : ''}
+          </div>
+        </div>
+        <div>
+          <div class="inv-party-label">Bill To</div>
+          <div class="inv-party-name">${clientName}</div>
+          <div class="inv-party-detail">
+            ${clientGst ? 'GSTIN: ' + clientGst + '<br>' : ''}
+            ${clientEmail ? clientEmail + '<br>' : ''}
+            ${clientPhone ? clientPhone + '<br>' : ''}
+            ${clientAddr ? clientAddr.replace(/\n/g,'<br>') : ''}
+          </div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Description</th>
+            <th style="text-align:center">Qty</th>
+            <th style="text-align:right">Rate</th>
+            <th style="text-align:right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <div class="inv-totals">
+        <div class="inv-total-row"><span>Subtotal</span><span>₹${fmt(subtotal)}</span></div>
+        ${gstRows}
+        <div class="inv-total-row grand"><span>Total</span><span>₹${fmt(total)}</span></div>
+      </div>
+
+      <div class="inv-footer">
+        <div>Thank you for your business!</div>
+        <div style="margin-top:6px;">Built by <strong>Divyanshi Jaiswal</strong> · divyanshi3240804@gmail.com</div>
+        <a href="https://digitalheroesco.com" target="_blank" class="inv-built-link">Built for Digital Heroes</a>
+      </div>
+    `;
+
+    document.getElementById('preview-section').style.display = 'block';
+    document.getElementById('preview-section').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function printInvoice() {
+    generateInvoice();
+    setTimeout(() => window.print(), 300);
+  }
+
+  function resetForm() {
+    if (!confirm('Reset all fields?')) return;
+    document.querySelectorAll('input, textarea, select').forEach(el => {
+      if (el.type === 'date') return;
+      if (el.tagName === 'SELECT') el.selectedIndex = 3;
+      else el.value = '';
+    });
+    document.getElementById('inv-number').value = 'INV-001';
+    document.getElementById('inv-date').valueAsDate = new Date();
+    items = [];
+    addItem();
+    document.getElementById('preview-section').style.display = 'none';
+    recalculate();
+  }
+</script>
+</body>
+</html>
